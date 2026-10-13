@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <link rel="icon" href="./zoro_ai_logo.png" type="image/png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zoro AI</title>
+    <link href="./src/output.css" rel="stylesheet" />
+    <style>
+        /* ===== Theme colors. Change these to restyle the whole app. ===== */
+        :root {
+            color-scheme: dark;
+            --c-bg: #050510;
+            --c-panel: #0B0B1F;
+            --c-surface: #111126;
+            --c-raised: #171535;
+            --c-raised-2: #0F0F24;
+            --c-raised-hover: #1F1D45;
+            --c-border: #292744;
+            --c-border-strong: #3A3466;
+            --c-text: #F8F7FF;
+            --c-muted: #B8B5C8;
+            --c-faint: #77748A;
+            --c-ok: #72E6A1;
+            --c-ok-bg: #14301F;
+            --c-think-bg: #2A1F4D;
+            --c-danger: #FCA5A5;
+            --c-accent: #9B5CFF;
+            --c-accent-hover: #A855F7;
+            --c-accent-text: color-mix(in srgb, var(--c-accent) 65%, white);
+        }
+
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --c-bg: #F4F3FA;
+            --c-panel: #FFFFFF;
+            --c-surface: #FBFAFF;
+            --c-raised: #EDE9FB;
+            --c-raised-2: #F7F5FF;
+            --c-raised-hover: #E3DDF8;
+            --c-border: #DDD9EE;
+            --c-border-strong: #CBC3EC;
+            --c-text: #17142B;
+            --c-muted: #5B5775;
+            --c-faint: #7A7692;
+            --c-ok: #15803D;
+            --c-ok-bg: #DCFCE7;
+            --c-think-bg: #EDE9FE;
+            --c-danger: #DC2626;
+            --c-accent-text: color-mix(in srgb, var(--c-accent) 75%, black);
+        }
+
+        /* accent colors */
+        :root[data-accent="blue"] { --c-accent: #3B82F6; --c-accent-hover: #5B9BFF; }
+        :root[data-accent="pink"] { --c-accent: #EC4899; --c-accent-hover: #F472B6; }
+        :root[data-accent="green"] { --c-accent: #16A34A; --c-accent-hover: #22C55E; }
+
+        /* white text on every accent-colored button, in both themes */
+        .bg-\[color\:var\(--c-accent\)\] { color: #fff; }
+
+        /* softer shadows in the light theme */
+        :root[data-theme="light"] .shadow-black\/30 { --tw-shadow-color: rgb(80 60 140 / 0.14); }
+    </style>
+    <script>
+        // Apply the saved theme before the page paints, so there is no flash
+        try {
+            var saved = JSON.parse(localStorage.getItem("zoro-settings") || "{}");
+            var mode = saved.theme || "dark";
+            if (mode === "system") mode = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+            document.documentElement.dataset.theme = mode;
+            document.documentElement.dataset.accent = saved.accent || "purple";
+        } catch (e) {}
+    </script>
+    <!-- Builds Tailwind classes live in the browser, so no npm build is needed while you work.
+         Needs internet. Remove this line once you run "npm run build" for the final version. -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.11"></script>
+</head>
+
+<body class="bg-[color:var(--c-bg)] text-[color:var(--c-text)]">
+
+    <div class="flex min-h-screen">
+
+        <!-- ============ SIDEBAR ============ -->
+        <aside
+            class="group fixed left-0 top-0 z-50 h-screen w-16 overflow-hidden border-r border-[color:var(--c-border)] bg-[color:var(--c-panel)] transition-all duration-300 hover:w-64 hover:bg-[color:var(--c-panel)]/80">
+
+            <!-- logo -->
+            <div class="flex h-20 items-center px-4">
+                <div
+                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--c-raised)] text-[color:var(--c-accent)] group-hover:hidden">
+                    <span class="text-2xl font-bold text-[color:var(--c-accent)]">乙</span>
+                </div>
+                <h1 class="hidden whitespace-nowrap text-2xl font-bold text-[color:var(--c-accent)] group-hover:block">Zoro AI</h1>
+            </div>
+
+            <!-- navigation -->
+            <nav class="px-3">
+                <a href="#" data-nav="home" class="flex items-center rounded-xl px-2 py-3 text-[color:var(--c-muted)] hover:bg-[color:var(--c-surface)]">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center text-lg">🏠︎</span>
+                    <span class="ml-4 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">Home</span>
+                </a>
+
+                <a href="#" data-nav="chat" class="mt-2 flex items-center rounded-xl px-2 py-3 text-[color:var(--c-muted)] hover:bg-[color:var(--c-surface)]">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center text-lg">➤</span>
+                    <span class="ml-4 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">Chat</span>
+                </a>
+
+                <a href="#" data-nav="history" class="mt-2 flex items-center rounded-xl px-2 py-3 text-[color:var(--c-muted)] hover:bg-[color:var(--c-surface)]">
+                    <span class="flex h-7 w-7 shrink-0 items-center justify-center text-lg font-bold">🕛</span>
+                    <span class="ml-4 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">History</span>
+                </a>
+
+                <a href="#" data-nav="profile" class="mt-2 flex items-center rounded-xl px-2 py-3 text-[color:var(--c-muted)] hover:bg-[color:var(--c-surface)]">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center text-lg">👤</span>
+                    <span class="ml-4 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">Profile</span>
+                </a>
+            </nav>
+
+            <!-- settings -->
+            <div class="mt-10 px-3">
+                <a href="#" data-nav="settings" class="flex items-center rounded-xl px-2 py-3 text-[color:var(--c-muted)] hover:bg-[color:var(--c-surface)]">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center text-lg">⚙️</span>
+                    <span class="ml-4 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">Settings</span>
+                </a>
+                <button id="sidebar-logout" type="button"
+                    onclick="if(!window.zoroLogout&&confirm('Log out of Zoro?')){localStorage.removeItem('zoro-auth');localStorage.removeItem('zoro-guest');location.reload()}"
+                    class="mt-2 flex w-full items-center rounded-xl px-2 py-3 text-left text-[color:var(--c-muted)] transition-colors hover:bg-[color:var(--c-surface)] hover:text-[color:var(--c-danger)]">
+                    <span class="flex h-6 w-6 shrink-0 items-center justify-center text-lg">🚪</span>
+                    <span id="sidebar-logout-label" class="ml-4 whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover:opacity-100">Log out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============ MAIN ============ -->
+        <main class="ml-16 flex-1">
+
+            <!-- ===== HOME ===== -->
+            <section data-view="home" class="p-10">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h2 id="time_greeting" class="text-4xl font-bold">Good Evening 👋</h2>
+                        <p id="greeding-text" class="mt-2 min-h-6 text-[color:var(--c-muted)]">What can I help you with today?</p>
+                    </div>
+                    <div class="text-right">
+                        <p id="current-time" class="text-2xl font-semibold text-[color:var(--c-text)]"></p>
+                        <p id="current-date" class="mt-1 text-sm text-[color:var(--c-muted)]"></p>
+                    </div>
+                </div>
+
+                <!-- dashboard -->
+                <div class="mt-10 grid grid-cols-2 gap-6">
+
+                    <!-- weather card -->
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/50">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm text-[color:var(--c-faint)]">Weather</h3>
+                            <span id="weather-icon" class="text-2xl">☀️</span>
+                        </div>
+
+                        <div class="mt-5">
+                            <div class="flex items-end gap-1">
+                                <p id="temperature" class="text-4xl font-bold">--</p>
+                                <span class="text-4xl font-bold">°</span>
+                                <p id="temp-unit" class="mb-1 text-[color:var(--c-muted)]">C</p>
+                            </div>
+                            <p id="weather-condition" class="mt-2 text-lg">Loading...</p>
+                            <p id="weather-location" class="mt-1 text-sm text-[color:var(--c-muted)]">Finding your location...</p>
+                        </div>
+
+                        <div class="mt-6 flex items-center gap-8 border-t border-[color:var(--c-border)] pt-4">
+                            <div>
+                                <p class="text-xs text-[color:var(--c-faint)]">Feels like</p>
+                                <p id="feels-like" class="mt-1 text-sm">--</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-[color:var(--c-faint)]">Humidity</p>
+                                <p id="humidity" class="mt-1 text-sm">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- tasks card -->
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/50">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm text-[color:var(--c-faint)]">Tasks</h3>
+                            <button id="add-task-btn" class="rounded-lg bg-[color:var(--c-accent)] px-3 py-1.5 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">+</button>
+                        </div>
+
+                        <div class="mt-4">
+                            <p class="text-xs text-[color:var(--c-faint)]">To Do</p>
+                            <div id="todo-list" class="tasks-scroll mt-3 max-h-28 space-y-3 overflow-y-auto pr-2"></div>
+                        </div>
+
+                        <div class="mt-6">
+                            <p class="text-xs text-[color:var(--c-faint)]">Completed</p>
+                            <div id="completed-list" class="tasks-scroll mt-3 max-h-28 space-y-3 overflow-y-auto pr-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- notes card -->
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/50">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm text-[color:var(--c-faint)]">Notes</h3>
+                            <button id="add-note-btn" class="rounded-lg bg-[color:var(--c-accent)] px-3 py-1.5 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">+</button>
+                        </div>
+                        <div id="notes-list" class="notes-scroll mt-5 max-h-52 space-y-3 overflow-y-auto pr-2"></div>
+                    </div>
+
+                    <!-- mood card -->
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/50">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm text-[color:var(--c-faint)]">Mood</h3>
+                            <span id="mood-emoji" class="text-3xl"></span>
+                        </div>
+                        <div class="mt-6">
+                            <p id="mood-name" class="text-4xl font-bold"></p>
+                            <p id="mood-description" class="mt-2 text-sm text-[color:var(--c-muted)]"></p>
+                        </div>
+                        <div class="mt-6 flex items-center gap-2 border-t border-[color:var(--c-border)] pt-4">
+                            <span class="h-2 w-2 rounded-full bg-[#F472B6]"></span>
+                            <p id="mood-status" class="text-xs text-[color:var(--c-muted)]">Your mood today</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ask Zoro -->
+                <div class="sticky bottom-0 z-10 mt-8 bg-[color:var(--c-bg)] pb-2 pt-4">
+                    <div class="flex items-center gap-3 rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-5 py-4 shadow-lg">
+                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[color:var(--c-raised)] text-[color:var(--c-accent)]">乙</div>
+
+                        <textarea id="zoro-input" rows="1" placeholder="Ask Zoro anything..."
+                            class="flex-1 resize-none bg-transparent px-2 py-1 text-sm leading-6 text-[color:var(--c-text)] outline-none placeholder:text-[color:var(--c-faint)]"></textarea>
+
+                        <button type="button" id="voice-btn"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[color:var(--c-muted)] hover:bg-[color:var(--c-raised)] hover:text-[color:var(--c-text)]">🎙</button>
+
+                        <button type="button" id="zoro-send"
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color:var(--c-accent)] text-sm hover:bg-[color:var(--c-accent-hover)]">➤</button>
+                    </div>
+                    <p class="mt-2 text-center text-xs text-[color:var(--c-faint)]">Zoro AI can make mistakes. Check important information.</p>
+                </div>
+            </section>
+
+            <!-- ===== CHAT ===== -->
+            <section data-view="chat" class="hidden h-screen">
+
+                <!-- chats panel -->
+                <aside id="chat-panel"
+                    class="flex w-64 shrink-0 flex-col border-r border-[color:var(--c-border)] bg-[color:var(--c-panel)]">
+                    <div class="p-3">
+                        <button id="sidebar-new-chat" type="button"
+                            class="flex w-full items-center gap-3 rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] px-3 py-2.5 text-sm font-medium transition-colors hover:border-[color:var(--c-accent)]/60 hover:bg-[color:var(--c-raised)]">
+                            <svg class="h-4 w-4 text-[color:var(--c-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            New chat
+                        </button>
+                    </div>
+                    <p class="px-5 pb-2 text-xs font-semibold text-[color:var(--c-faint)]">Your chats</p>
+                    <div id="chat-list" class="tasks-scroll flex-1 space-y-1 overflow-y-auto px-3 pb-3"></div>
+                </aside>
+
+                <!-- chat area -->
+                <div class="flex min-w-0 flex-1 flex-col px-1.5 pb-3 pt-3">
+
+                <!-- header -->
+                <header class="flex items-center justify-between border-b border-[color:var(--c-border)] px-3 pb-4">
+                    <div class="flex items-center gap-4">
+                        <button id="panel-toggle" type="button"
+                            onclick="var p=document.getElementById('chat-panel');p.classList.toggle('hidden');p.classList.toggle('flex')" title="Show or hide your chats" aria-label="Show or hide your chats"
+                            class="flex h-9 w-9 items-center justify-center rounded-lg text-[color:var(--c-muted)] transition-colors hover:bg-[color:var(--c-raised)] hover:text-[color:var(--c-text)]">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="16" rx="2" />
+                                <path d="M9 4v16" />
+                            </svg>
+                        </button>
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[color:var(--c-raised)] text-xl text-[color:var(--c-accent)]">乙</div>
+                        <div>
+                            <h2 class="font-semibold">Zoro AI</h2>
+                            <p class="text-xs text-[color:var(--c-muted)]">Your personal AI assistant</p>
+                        </div>
+                    </div>
+                    <span id="chat-status"
+                        class="rounded-full bg-[color:var(--c-ok-bg)] px-3 py-1 text-xs font-medium text-[color:var(--c-ok)]">Ready</span>
+                </header>
+
+                <!-- empty state (shown until the first message) -->
+                <div id="chat-empty" class="flex w-full overflow-y-auto px-3 flex-1 flex-col items-center justify-center text-center">
+                    <div class="flex h-16 w-16 items-center justify-center rounded-2xl border border-[color:var(--c-border-strong)] bg-[color:var(--c-raised)] text-3xl text-[color:var(--c-accent)]">乙</div>
+                    <h3 class="mt-6 text-xl font-bold">What can I help with?</h3>
+                    <p class="mt-4 text-sm text-[color:var(--c-muted)]">Ask a question, explore an idea, or start something new.</p>
+
+                    <div class="mt-10 grid w-full grid-cols-2 gap-5 text-left">
+                        <button type="button" data-prompt="Explain something to me step by step."
+                            class="suggestion group/card flex items-center gap-4 rounded-2xl border border-[color:var(--c-border)] bg-gradient-to-br from-[color:var(--c-raised)] to-[color:var(--c-raised-2)] p-5 shadow-lg shadow-black/30 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/60 hover:shadow-[color:var(--c-accent)]/10 focus-visible:outline-2 focus-visible:outline-[color:var(--c-accent)]">
+                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[color:var(--c-border-strong)] bg-[color:var(--c-accent)]/15 text-[color:var(--c-accent-text)]">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2v.3h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z" />
+                                </svg>
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-base font-semibold">Explain something</span>
+                                <span class="mt-1 block text-sm text-[color:var(--c-muted)]">Learn step by step</span>
+                            </span>
+                            <svg class="h-5 w-5 shrink-0 text-[color:var(--c-faint)] transition-all duration-300 group-hover/card:translate-x-1 group-hover/card:text-[color:var(--c-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                        </button>
+
+                        <button type="button" data-prompt="Help me debug and build some code."
+                            class="suggestion group/card flex items-center gap-4 rounded-2xl border border-[color:var(--c-border)] bg-gradient-to-br from-[color:var(--c-raised)] to-[color:var(--c-raised-2)] p-5 shadow-lg shadow-black/30 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/60 hover:shadow-[color:var(--c-accent)]/10 focus-visible:outline-2 focus-visible:outline-[color:var(--c-accent)]">
+                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[color:var(--c-border-strong)] bg-[color:var(--c-accent)]/15 text-[color:var(--c-accent-text)]">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m16 18 6-6-6-6M8 6l-6 6 6 6" />
+                                </svg>
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-base font-semibold">Help with code</span>
+                                <span class="mt-1 block text-sm text-[color:var(--c-muted)]">Debug and build</span>
+                            </span>
+                            <svg class="h-5 w-5 shrink-0 text-[color:var(--c-faint)] transition-all duration-300 group-hover/card:translate-x-1 group-hover/card:text-[color:var(--c-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                        </button>
+
+                        <button type="button" data-prompt="Help me write something."
+                            class="suggestion group/card flex items-center gap-4 rounded-2xl border border-[color:var(--c-border)] bg-gradient-to-br from-[color:var(--c-raised)] to-[color:var(--c-raised-2)] p-5 shadow-lg shadow-black/30 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/60 hover:shadow-[color:var(--c-accent)]/10 focus-visible:outline-2 focus-visible:outline-[color:var(--c-accent)]">
+                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[color:var(--c-border-strong)] bg-[color:var(--c-accent)]/15 text-[color:var(--c-accent-text)]">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+                                </svg>
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-base font-semibold">Write something</span>
+                                <span class="mt-1 block text-sm text-[color:var(--c-muted)]">Emails, essays and posts</span>
+                            </span>
+                            <svg class="h-5 w-5 shrink-0 text-[color:var(--c-faint)] transition-all duration-300 group-hover/card:translate-x-1 group-hover/card:text-[color:var(--c-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                        </button>
+
+                        <button type="button" data-prompt="Help me brainstorm some ideas."
+                            class="suggestion group/card flex items-center gap-4 rounded-2xl border border-[color:var(--c-border)] bg-gradient-to-br from-[color:var(--c-raised)] to-[color:var(--c-raised-2)] p-5 shadow-lg shadow-black/30 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-[color:var(--c-accent)]/60 hover:shadow-[color:var(--c-accent)]/10 focus-visible:outline-2 focus-visible:outline-[color:var(--c-accent)]">
+                            <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[color:var(--c-border-strong)] bg-[color:var(--c-accent)]/15 text-[color:var(--c-accent-text)]">
+                                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 16v4M17 18h4" />
+                                </svg>
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-base font-semibold">Brainstorm ideas</span>
+                                <span class="mt-1 block text-sm text-[color:var(--c-muted)]">Explore new directions</span>
+                            </span>
+                            <svg class="h-5 w-5 shrink-0 text-[color:var(--c-faint)] transition-all duration-300 group-hover/card:translate-x-1 group-hover/card:text-[color:var(--c-accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- messages (shown after the first message) -->
+                <div id="chat-messages"
+                    class="tasks-scroll hidden w-full flex-1 space-y-4 overflow-y-auto py-6 pl-3 pr-3"></div>
+
+                <!-- input -->
+                <div class="w-full px-3">
+                    <form id="chat-form"
+                        class="flex items-end gap-3 rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 focus-within:border-[color:var(--c-accent)]/60">
+                        <button type="button" id="new-chat-btn" title="New chat"
+                            class="flex h-10 w-8 shrink-0 items-center justify-center text-xl text-[color:var(--c-muted)] hover:text-[color:var(--c-text)]">+</button>
+                        <textarea id="chat-input" rows="1" placeholder="Message Zoro..."
+                            class="max-h-40 flex-1 resize-none bg-transparent px-1 py-2 text-sm leading-6 outline-none placeholder:text-[color:var(--c-faint)]"></textarea>
+                        <button type="submit" aria-label="Send message"
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[color:var(--c-accent)] hover:bg-[color:var(--c-accent-hover)]">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 19V5M5 12l7-7 7 7" />
+                            </svg>
+                        </button>
+                    </form>
+                    <p class="mt-3 text-center text-xs text-[color:var(--c-faint)]">Zoro AI can make mistakes. Check important information.</p>
+                </div>
+            </div>
+            </section>
+
+            <!-- ===== HISTORY ===== -->
+            <section data-view="history" class="hidden p-10">
+                <h2 class="text-2xl font-bold">History</h2>
+                <p class="mt-2 text-sm text-[color:var(--c-muted)]">Your past chats. Open one to keep talking.</p>
+
+                <div class="relative mt-6 max-w-4xl">
+                    <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--c-faint)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m21 21-4.3-4.3" />
+                    </svg>
+                    <input id="history-search" type="search" placeholder="Search your chats..."
+                        class="w-full rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] py-3 pl-11 pr-4 text-sm outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]" />
+                </div>
+
+                <div id="history-list" class="mt-6 max-w-4xl space-y-6"></div>
+            </section>
+
+            <!-- ===== PROFILE ===== -->
+            <section data-view="profile" class="hidden p-10">
+                <h2 class="text-2xl font-bold">Profile</h2>
+                <p class="mt-2 text-sm text-[color:var(--c-muted)]">Manage your details and your account.</p>
+
+                <!-- summary -->
+                <div class="mt-8 flex items-center gap-6 rounded-2xl border border-[color:var(--c-border)] bg-gradient-to-br from-[color:var(--c-raised)] to-[color:var(--c-raised-2)] p-6 shadow-lg shadow-black/30">
+                    <div id="profile-avatar"
+                        title="Change photo"
+                        class="flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-[color:var(--c-border-strong)] bg-[color:var(--c-accent)]/20 text-3xl font-bold text-[color:var(--c-accent-text)] transition-colors hover:border-[color:var(--c-accent)]">A</div>
+                    <div class="min-w-0 flex-1">
+                        <h3 id="profile-display-name" class="truncate text-2xl font-bold"></h3>
+                        <p id="profile-display-email" class="mt-1 truncate text-sm text-[color:var(--c-muted)]"></p>
+                        <p id="profile-display-bio" class="mt-2 text-sm text-[color:var(--c-muted)]"></p>
+                        <div class="mt-4 flex items-center gap-3">
+                            <button id="photo-btn" type="button" class="rounded-lg bg-[color:var(--c-accent)] px-3 py-1.5 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">Change photo</button>
+                            <button id="photo-remove" type="button" class="hidden rounded-lg border border-[color:var(--c-border)] px-3 py-1.5 text-sm text-[color:var(--c-muted)] hover:text-[color:var(--c-text)]">Remove</button>
+                            <input id="photo-input" type="file" accept="image/*" class="hidden" />
+                            <p id="photo-status" class="text-xs text-[color:var(--c-muted)]"></p>
+                        </div>
+                    </div>
+                    <span id="profile-badge" class="shrink-0 rounded-full bg-[color:var(--c-raised)] px-3 py-1 text-xs text-[color:var(--c-muted)]">Guest</span>
+                </div>
+
+                <!-- stats -->
+                <div class="mt-6 grid grid-cols-3 gap-6">
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                        <p class="text-sm text-[color:var(--c-faint)]">Chats</p>
+                        <p id="stat-chats" class="mt-3 text-3xl font-bold">0</p>
+                        <p class="mt-1 text-xs text-[color:var(--c-muted)]">Conversations</p>
+                    </div>
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                        <p class="text-sm text-[color:var(--c-faint)]">Tasks</p>
+                        <p id="stat-tasks" class="mt-3 text-3xl font-bold">0/0</p>
+                        <p class="mt-1 text-xs text-[color:var(--c-muted)]">Completed</p>
+                    </div>
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                        <p class="text-sm text-[color:var(--c-faint)]">Notes</p>
+                        <p id="stat-notes" class="mt-3 text-3xl font-bold">0</p>
+                        <p class="mt-1 text-xs text-[color:var(--c-muted)]">Saved notes</p>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-6">
+                    <!-- edit details -->
+                    <form id="profile-form" class="space-y-4 rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                        <h3 class="font-semibold">Your details</h3>
+                        <div>
+                            <label class="text-sm text-[color:var(--c-muted)]" for="profile-name">Display name</label>
+                            <input id="profile-name" type="text" placeholder="Your name"
+                                class="mt-2 w-full rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]" />
+                        </div>
+                        <div>
+                            <label class="text-sm text-[color:var(--c-muted)]" for="profile-email">Email</label>
+                            <input id="profile-email" type="email" placeholder="you@example.com"
+                                class="mt-2 w-full rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]" />
+                        </div>
+                        <div>
+                            <label class="text-sm text-[color:var(--c-muted)]" for="profile-location">Location</label>
+                            <input id="profile-location" type="text" placeholder="City, Country"
+                                class="mt-2 w-full rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]" />
+                        </div>
+                        <div>
+                            <label class="text-sm text-[color:var(--c-muted)]" for="profile-bio">Bio</label>
+                            <textarea id="profile-bio" rows="3" maxlength="160" placeholder="Tell Zoro a little about yourself"
+                                class="mt-2 w-full resize-none rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]"></textarea>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <button type="submit" class="rounded-xl bg-[color:var(--c-accent)] px-4 py-2 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">Save changes</button>
+                            <p id="profile-status" class="text-sm text-[color:var(--c-muted)]"></p>
+                        </div>
+                    </form>
+
+                    <!-- account -->
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                        <h3 class="font-semibold">Account</h3>
+                        <p id="auth-description" class="mt-2 text-sm text-[color:var(--c-muted)]">Sign in to link Zoro to your account.</p>
+
+                        <!-- shown when signed out -->
+                        <div id="auth-signed-out" class="mt-6 space-y-3">
+                            <div id="google-slot">
+                                <button id="google-btn" type="button"
+                                    class="flex w-full items-center justify-center gap-3 rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm font-medium transition-colors hover:border-[color:var(--c-accent)]/60">
+                                    <svg class="h-5 w-5" viewBox="0 0 48 48">
+                                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                                    </svg>
+                                    Continue with Google
+                                </button>
+                            </div>
+                            <button id="facebook-btn" type="button"
+                                class="flex w-full items-center justify-center gap-3 rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm font-medium transition-colors hover:border-[color:var(--c-accent)]/60">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="#1877F2">
+                                    <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.7 4.53-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z" />
+                                </svg>
+                                Continue with Facebook
+                            </button>
+                        </div>
+
+                        <!-- shown when signed in -->
+                        <div id="auth-signed-in" class="mt-6 hidden">
+                            <button id="logout-btn" type="button"
+                                class="w-full rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm font-medium text-[color:var(--c-muted)] transition-colors hover:border-red-400/60 hover:text-[color:var(--c-danger)]">
+                                Log out
+                            </button>
+                        </div>
+
+                        <p id="auth-status" class="mt-4 text-sm text-[color:var(--c-muted)]"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== SETTINGS ===== -->
+            <section data-view="settings" class="hidden p-10">
+                <h2 class="text-2xl font-bold">Settings</h2>
+                <p class="mt-2 text-sm text-[color:var(--c-muted)]">Changes save automatically on this browser.</p>
+
+                <!-- appearance -->
+                <div class="mt-8 rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                    <h3 class="font-semibold">Appearance</h3>
+
+                    <div class="mt-4 flex items-center justify-between gap-4 border-b border-[color:var(--c-border)] py-4">
+                        <div>
+                            <p class="text-sm font-medium">Theme</p>
+                            <p class="mt-1 text-xs text-[color:var(--c-muted)]">Choose a dark or light look, or match your device.</p>
+                        </div>
+                        <div class="flex gap-2" role="group" aria-label="Theme">
+                            <button type="button" data-theme-option="dark" aria-pressed="true"
+                                class="rounded-lg border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-2 text-sm text-[color:var(--c-muted)] transition-colors hover:border-[color:var(--c-accent)]/60 aria-pressed:border-[color:var(--c-accent)] aria-pressed:bg-[color:var(--c-accent)]/15 aria-pressed:text-[color:var(--c-accent-text)]">Dark</button>
+                            <button type="button" data-theme-option="light" aria-pressed="false"
+                                class="rounded-lg border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-2 text-sm text-[color:var(--c-muted)] transition-colors hover:border-[color:var(--c-accent)]/60 aria-pressed:border-[color:var(--c-accent)] aria-pressed:bg-[color:var(--c-accent)]/15 aria-pressed:text-[color:var(--c-accent-text)]">Light</button>
+                            <button type="button" data-theme-option="system" aria-pressed="false"
+                                class="rounded-lg border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-2 text-sm text-[color:var(--c-muted)] transition-colors hover:border-[color:var(--c-accent)]/60 aria-pressed:border-[color:var(--c-accent)] aria-pressed:bg-[color:var(--c-accent)]/15 aria-pressed:text-[color:var(--c-accent-text)]">System</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-4 pt-4">
+                        <div>
+                            <p class="text-sm font-medium">Accent color</p>
+                            <p class="mt-1 text-xs text-[color:var(--c-muted)]">Used for buttons, highlights and the active page.</p>
+                        </div>
+                        <div class="flex gap-3" role="group" aria-label="Accent color">
+                            <button type="button" data-accent-option="purple" aria-label="Purple" aria-pressed="true" style="background:#9B5CFF"
+                                class="h-8 w-8 rounded-full ring-offset-2 ring-offset-[color:var(--c-surface)] aria-pressed:ring-2 aria-pressed:ring-[color:var(--c-text)]"></button>
+                            <button type="button" data-accent-option="blue" aria-label="Blue" aria-pressed="false" style="background:#3B82F6"
+                                class="h-8 w-8 rounded-full ring-offset-2 ring-offset-[color:var(--c-surface)] aria-pressed:ring-2 aria-pressed:ring-[color:var(--c-text)]"></button>
+                            <button type="button" data-accent-option="pink" aria-label="Pink" aria-pressed="false" style="background:#EC4899"
+                                class="h-8 w-8 rounded-full ring-offset-2 ring-offset-[color:var(--c-surface)] aria-pressed:ring-2 aria-pressed:ring-[color:var(--c-text)]"></button>
+                            <button type="button" data-accent-option="green" aria-label="Green" aria-pressed="false" style="background:#16A34A"
+                                class="h-8 w-8 rounded-full ring-offset-2 ring-offset-[color:var(--c-surface)] aria-pressed:ring-2 aria-pressed:ring-[color:var(--c-text)]"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-6">
+
+                    <!-- chat -->
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                        <h3 class="font-semibold">Chat</h3>
+
+                        <div class="mt-4 flex items-center justify-between gap-4 border-b border-[color:var(--c-border)] py-4">
+                            <div>
+                                <p class="text-sm font-medium">Press Enter to send</p>
+                                <p class="mt-1 text-xs text-[color:var(--c-muted)]">Turn off to send with the arrow button only. Shift+Enter adds a new line.</p>
+                            </div>
+                            <label class="relative inline-flex shrink-0 cursor-pointer items-center">
+                                <input id="enter-to-send" type="checkbox" checked class="peer sr-only" />
+                                <span class="h-6 w-11 rounded-full bg-[color:var(--c-border)] transition-colors peer-checked:bg-[color:var(--c-accent)] peer-focus-visible:outline-2 peer-focus-visible:outline-[color:var(--c-accent)] after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5"></span>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 pt-4">
+                            <div>
+                                <p class="text-sm font-medium">Voice language</p>
+                                <p class="mt-1 text-xs text-[color:var(--c-muted)]">Language used by the microphone button.</p>
+                            </div>
+                            <select id="setting-voice-lang"
+                                class="rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-3 py-2 text-sm outline-none focus:border-[color:var(--c-accent)]">
+                                <option value="en-US">English (US)</option>
+                                <option value="en-GB">English (UK)</option>
+                                <option value="hi-IN">Hindi</option>
+                                <option value="ne-NP">Nepali</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- dashboard -->
+                    <div class="rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                        <h3 class="font-semibold">Dashboard</h3>
+
+                        <div class="mt-4 flex items-center justify-between gap-4 border-b border-[color:var(--c-border)] py-4">
+                            <div>
+                                <p class="text-sm font-medium">Time format</p>
+                                <p class="mt-1 text-xs text-[color:var(--c-muted)]">How the clock is shown on Home.</p>
+                            </div>
+                            <select id="setting-time-format"
+                                class="rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-3 py-2 text-sm outline-none focus:border-[color:var(--c-accent)]">
+                                <option value="12">12-hour</option>
+                                <option value="24">24-hour</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 border-b border-[color:var(--c-border)] py-4">
+                            <div>
+                                <p class="text-sm font-medium">Temperature unit</p>
+                                <p class="mt-1 text-xs text-[color:var(--c-muted)]">Used on the weather card.</p>
+                            </div>
+                            <select id="setting-temp-unit"
+                                class="rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-3 py-2 text-sm outline-none focus:border-[color:var(--c-accent)]">
+                                <option value="C">Celsius (°C)</option>
+                                <option value="F">Fahrenheit (°F)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-4 pt-4">
+                            <div>
+                                <p class="text-sm font-medium">Animated greeting</p>
+                                <p class="mt-1 text-xs text-[color:var(--c-muted)]">Type out the line under your name.</p>
+                            </div>
+                            <label class="relative inline-flex shrink-0 cursor-pointer items-center">
+                                <input id="setting-typing-greeting" type="checkbox" checked class="peer sr-only" />
+                                <span class="h-6 w-11 rounded-full bg-[color:var(--c-border)] transition-colors peer-checked:bg-[color:var(--c-accent)] peer-focus-visible:outline-2 peer-focus-visible:outline-[color:var(--c-accent)] after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- account -->
+                <div class="mt-6 rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                    <h3 class="font-semibold">Account</h3>
+                    <div class="mt-4 flex items-center justify-between gap-4">
+                        <div class="flex min-w-0 items-center gap-4">
+                            <div id="settings-avatar"
+                                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[color:var(--c-border-strong)] bg-[color:var(--c-accent)]/20 text-lg font-bold text-[color:var(--c-accent-text)]">G</div>
+                            <div class="min-w-0">
+                                <p id="settings-account-name" class="truncate text-sm font-medium">Guest</p>
+                                <p id="settings-account-detail" class="mt-1 truncate text-xs text-[color:var(--c-muted)]">You're not signed in</p>
+                            </div>
+                        </div>
+                        <button id="settings-logout" type="button"
+                            class="hidden shrink-0 rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-2 text-sm text-[color:var(--c-muted)] transition-colors hover:border-red-400/60 hover:text-[color:var(--c-danger)]">Log out</button>
+                        <button id="settings-go-profile" type="button"
+                            class="shrink-0 rounded-xl bg-[color:var(--c-accent)] px-4 py-2 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">Sign in</button>
+                    </div>
+                </div>
+
+                <!-- data -->
+                <div class="mt-6 rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+                    <h3 class="font-semibold">Your data</h3>
+                    <p class="mt-2 text-sm text-[color:var(--c-muted)]">Everything is stored in this browser only.</p>
+
+                    <div class="mt-5 flex flex-wrap gap-3">
+                        <button id="export-data" type="button"
+                            class="rounded-xl bg-[color:var(--c-accent)] px-4 py-2 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">Export my data</button>
+                        <button id="clear-history" type="button"
+                            class="rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-2 text-sm hover:border-[color:var(--c-accent)]/60">Delete all chats</button>
+                        <button id="clear-tasks-notes" type="button"
+                            class="rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-2 text-sm hover:border-[color:var(--c-accent)]/60">Clear tasks and notes</button>
+                        <button id="reset-all" type="button"
+                            class="rounded-xl border border-red-400/40 bg-[color:var(--c-panel)] px-4 py-2 text-sm text-[color:var(--c-danger)] hover:border-red-400">Reset everything</button>
+                    </div>
+                    <p id="setting-status" class="mt-4 text-sm text-[color:var(--c-muted)]"></p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============ ADD TASK MODAL ============ -->
+    <div id="task-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60">
+        <div class="w-full max-w-md rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold">Add Task</h3>
+                <button id="close-task-modal" class="text-xl text-[color:var(--c-faint)] hover:text-[color:var(--c-text)]">×</button>
+            </div>
+            <div class="mt-6">
+                <label class="text-sm text-[color:var(--c-muted)]">Task name</label>
+                <input id="task-input" type="text" placeholder="Enter your task..."
+                    class="mt-2 w-full rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm text-[color:var(--c-text)] outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]" />
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="cancel-task" class="rounded-xl px-4 py-2 text-sm text-[color:var(--c-muted)] hover:bg-[color:var(--c-raised)]">Cancel</button>
+                <button id="save-task" class="rounded-xl bg-[color:var(--c-accent)] px-4 py-2 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">Add Task</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ ADD NOTE MODAL ============ -->
+    <div id="note-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60">
+        <div class="w-full max-w-md rounded-2xl border border-[color:var(--c-border)] bg-[color:var(--c-surface)] p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold">Add Note</h3>
+                <button id="close-note-modal" class="text-xl text-[color:var(--c-faint)] hover:text-[color:var(--c-text)]">×</button>
+            </div>
+            <div class="mt-6">
+                <label class="text-sm text-[color:var(--c-muted)]">Note title</label>
+                <input id="note-title" type="text" placeholder="Enter note title..."
+                    class="mt-2 w-full rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm text-[color:var(--c-text)] outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]" />
+            </div>
+            <div class="mt-4">
+                <label class="text-sm text-[color:var(--c-muted)]">Note</label>
+                <textarea id="note-description" rows="4" placeholder="Write your note..."
+                    class="mt-2 w-full resize-none rounded-xl border border-[color:var(--c-border)] bg-[color:var(--c-panel)] px-4 py-3 text-sm text-[color:var(--c-text)] outline-none placeholder:text-[color:var(--c-faint)] focus:border-[color:var(--c-accent)]"></textarea>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="cancel-note" class="rounded-xl px-4 py-2 text-sm text-[color:var(--c-muted)] hover:bg-[color:var(--c-raised)]">Cancel</button>
+                <button id="save-note" class="rounded-xl bg-[color:var(--c-accent)] px-4 py-2 text-sm font-medium hover:bg-[color:var(--c-accent-hover)]">Add Note</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="./alogin.js"></script>
+    <script src="./bscript.js"></script>
+    <script src="./clogout.js"></script>
+</body>
+
+</html>

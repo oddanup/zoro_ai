@@ -1,0 +1,77 @@
+@import "tailwindcss";
+/* Zoro AI Tasks Scrollbar */
+.tasks-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.tasks-scroll::-webkit-scrollbar-track {
+    background: #080817;
+    border-radius: 10px;
+}
+
+.tasks-scroll::-webkit-scrollbar-thumb {
+    background: #6D3DB8;
+    border-radius: 10px;
+}
+
+.tasks-scroll::-webkit-scrollbar-thumb:hover {
+    background: #7C3AED;
+}
+
+
+/* Zoro AI Notes Scrollbar */
+.notes-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.notes-scroll::-webkit-scrollbar-track {
+    background: #080817;
+    border-radius: 10px;
+}
+
+.notes-scroll::-webkit-scrollbar-thumb {
+    background: #6D3DB8;
+    border-radius: 10px;
+}
+
+.notes-scroll::-webkit-scrollbar-thumb:hover {
+    background: #7C3AED;
+}
+
+/* sending message scroll */
+#zoro-input::-webkit-scrollbar {
+    width: 4px;
+}
+
+#zoro-input::-webkit-scrollbar-track {
+    background: #080817;
+    border-radius: 10px;
+}
+
+#zoro-input::-webkit-scrollbar-thumb {
+    background: #6D3DB8;
+    border-radius: 10px;
+}
+
+#zoro-input::-webkit-scrollbar-thumb:hover {
+    background: #7C3AED;
+}
+
+/* Zoro AI Chat Scrollbar */
+.chat-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.chat-scroll::-webkit-scrollbar-track {
+    background: #080817;
+    border-radius: 10px;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb {
+    background: #6D3DB8;
+    border-radius: 10px;
+}
+
+.chat-scroll::-webkit-scrollbar-thumb:hover {
+    background: #7C3AED;
+}
